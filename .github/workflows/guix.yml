@@ -1,0 +1,93 @@
+name: "Guix Build"
+
+on:
+  # push:
+  #   branches:
+  #     - main
+  workflow_dispatch:
+    inputs:
+      repo:
+        description: "Firo repo"
+        default: "firoorg/firo"
+        required: true
+      ref:
+        description: "elements git ref"
+        default: "refs/tags/elements-23.2.1"
+        required: true
+      tag:
+        description: "the build tag"
+        default: "elements-23.2.1"
+        required: true
+
+jobs:
+  build:
+    name: "build"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [
+          x86_64-linux-gnu,       
+        ]
+    env:
+      MACOS_SDK: Xcode-12.2-12B45b-extracted-SDK-with-libcxx-headers
+      BUILD_TAG: ${{ inputs.tag }}
+      HOST: ${{ matrix.host }}
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - name: debug
+        run: |
+          pwd
+          whoami
+      - name: "checkout elements"
+        uses: actions/checkout@v3.3.0
+        with:
+          repository: ${{ inputs.repo }}
+          path: "elements"
+          ref: ${{ inputs.ref }}
+      #- name: gchr.io login
+      #  uses: docker/login-action@v2
+      #  with:
+      #    registry: ghcr.io
+      #    username: ${{ github.actor }}
+      #    password: ${{ secrets.READ_TOKEN }}
+      - name: "build script"
+        run: |
+          ./buildelements.sh
+      - name: debug
+        run: |
+          ls -alh output/output
+          tree output/output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.host }}
+          path: output/
+      - name: cleanup
+        run: |
+          WHO=$(whoami)
+          sudo chown -R $WHO:$WHO $(pwd)
+  sums:
+    name: sha256sums
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      BUILD_TAG: ${{ inputs.tag }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3.3.0
+      - uses: actions/download-artifact@v4
+        with:
+          path: output
+          merge-multiple: true
+      - name: script
+        run: |
+          find output/ -type f -name "*.txt" | xargs cat | awk '!x[$0]++' | tee sha256sums.txt
+          mkdir -p release
+          find output/ -type f -iregex ".*.\(gz\|zip\|exe\|dmg\)" -exec mv -t release {} +
+          cp sha256sums.txt release
+          echo -e "\`\`\`\n$(cat sha256sums.txt)\n\`\`\`" > notes
+          gh release create "$BUILD_TAG" --title "$BUILD_TAG" --notes-file notes release/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sha256sums.txt
+          path: sha256sums.txt
