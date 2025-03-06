@@ -85,8 +85,7 @@ __EOF__
 
 chmod 700 tmpfirobuild.sh
 docker cp tmpfirobuild.sh firobuild:/root/firobuild.sh
-pwd
-ls
+cd firo
 docker cp sources/. firobuild:/sources/
 docker exec -i firobuild /root/firobuild.sh
 mkdir -p output/
