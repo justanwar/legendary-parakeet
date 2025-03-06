@@ -22,7 +22,9 @@ if [ -z "$running" ];then
     docker container stop firobuild || :
     docker container rm -f firobuild || :
     git clone https://github.com/fanquake/core-review.git
+    pwd
     cd code-review/guix/
+    pwd
     DOCKER_BUILDKIT=1 docker build --pull --no-cache -t alpine_guix - < Dockerfile
     #docker run -dt --name firobuild --privileged -v "$FIRO_SRC":/firo/ ghcr.io/delta1/alpine-guix
     docker run -dt --name firobuild --privileged -v "$FIRO_SRC":/firo/ alpine-guix
