@@ -21,7 +21,11 @@ running=$(docker container list | grep firobuild || :)
 if [ -z "$running" ];then
     docker container stop firobuild || :
     docker container rm -f firobuild || :
-    docker run -dt --name firobuild --privileged -v "$FIRO_SRC":/firo/ ghcr.io/delta1/alpine-guix
+    git clone https://github.com/fanquake/core-review.git
+    cd code-review/guix/
+    DOCKER_BUILDKIT=1 docker build --pull --no-cache -t alpine_guix - < Dockerfile
+    #docker run -dt --name firobuild --privileged -v "$FIRO_SRC":/firo/ ghcr.io/delta1/alpine-guix
+    docker run -dt --name firobuild --privileged -v "$FIRO_SRC":/firo/ alpine-guix
 fi
 
 #if you build a hash instead of a tag, remember to use only the first 12 chars
