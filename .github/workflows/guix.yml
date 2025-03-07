@@ -15,9 +15,9 @@ on:
         default: "refs/heads/master"
         required: true
       tag:
-        description: "the build tag"
-        default: "v0.14.14.0"
-        required: false
+        description: "the build commit"
+        default: "0375ddef3e15"
+        required: true
 
 jobs:
   build:
