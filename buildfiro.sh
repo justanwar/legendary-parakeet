@@ -90,5 +90,5 @@ pwd
 ls
 #docker cp sources/. firobuild:/sources/
 docker exec -i firobuild /root/firobuild.sh
-mkdir -p output/
+sudo mkdir -p output/
 docker cp firobuild:/firo/"$builddir"/output/ output/
